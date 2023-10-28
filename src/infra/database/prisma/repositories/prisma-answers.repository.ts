@@ -31,7 +31,7 @@ export class PrismaAnswersRepository implements AnswerRepository {
   }
 
   async findById(id: string): Promise<Answer | null> {
-    const answer = await this.prisma.answer.findUnique({
+    const answer = await this.prisma.answer.findFirst({
       where: {
         id,
       },

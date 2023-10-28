@@ -4,12 +4,14 @@ import { JwtService } from '@nestjs/jwt'
 import request from 'supertest'
 
 import { AppModule } from '@/infra/app.module'
+import { PrismaService } from '@/infra/database/prisma/prisma.service'
+import { DatabaseModule } from '@/infra/database/database.module'
 import { StudentFactory } from 'test/factories/make-student'
 import { QuestionFactory } from 'test/factories/make-question'
-import { DatabaseModule } from '@/infra/database/database.module'
 
-describe('Fetch recent question (e2e)', () => {
+describe('Delete question (e2e)', () => {
   let app: INestApplication
+  let prisma: PrismaService
   let studentFactory: StudentFactory
   let questionFactory: QuestionFactory
   let jwt: JwtService
@@ -21,6 +23,7 @@ describe('Fetch recent question (e2e)', () => {
     }).compile()
 
     app = moduleRef.createNestApplication()
+    prisma = moduleRef.get(PrismaService)
     studentFactory = moduleRef.get(StudentFactory)
     questionFactory = moduleRef.get(QuestionFactory)
     jwt = moduleRef.get(JwtService)
@@ -28,33 +31,28 @@ describe('Fetch recent question (e2e)', () => {
     await app.init()
   })
 
-  test('[GET] /questions', async () => {
+  test('[DELETE] /questions/:id', async () => {
     const user = await studentFactory.makePrismaStudent()
 
     const accessToken = jwt.sign({ sub: user.id.toString() })
 
-    await Promise.all([
-      questionFactory.makePrismaQuestion({
-        title: 'Question 01',
-        authorId: user.id,
-      }),
-      questionFactory.makePrismaQuestion({
-        title: 'Question 02',
-        authorId: user.id,
-      }),
-    ])
+    const question = await questionFactory.makePrismaQuestion({
+      authorId: user.id,
+    })
+
+    const questionId = question.id.toString()
 
     const response = await request(app.getHttpServer())
-      .get('/questions')
+      .delete(`/questions/${questionId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send()
 
-    expect(response.statusCode).toEqual(200)
-    expect(response.body).toEqual({
-      questions: expect.arrayContaining([
-        expect.objectContaining({ title: 'Question 01' }),
-        expect.objectContaining({ title: 'Question 02' }),
-      ]),
+    expect(response.statusCode).toEqual(204)
+
+    const questionOnDatabase = await prisma.question.findUnique({
+      where: { id: questionId },
     })
+
+    expect(questionOnDatabase).toBeNull()
   })
 })
