@@ -14,7 +14,7 @@ import { EditAnswerUseCase } from '@/domain/forum/application/usecases/edit-answ
 
 const editAnswerBodySchema = z.object({
   content: z.string(),
-  attachments: z.array(z.string().uuid()),
+  attachments: z.array(z.string().uuid()).default([]),
 })
 
 const bodyValidationPipe = new ZodValidationPipe(editAnswerBodySchema)
