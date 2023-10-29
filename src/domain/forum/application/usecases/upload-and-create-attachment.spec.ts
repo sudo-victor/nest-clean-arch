@@ -18,7 +18,7 @@ describe('Upload and create attachment', () => {
     )
   })
 
-  it.only('should be able to upload and create an attachment', async () => {
+  it('should be able to upload and create an attachment', async () => {
     const result = await sut.execute({
       fileName: 'profile.png',
       fileType: 'image/png',
@@ -37,7 +37,7 @@ describe('Upload and create attachment', () => {
     )
   })
 
-  it.only('should not be able to upload and create an attachment with invalid file type', async () => {
+  it('should not be able to upload and create an attachment with invalid file type', async () => {
     const result = await sut.execute({
       fileName: 'profile.png',
       fileType: 'audio/mpeg',
